@@ -59,7 +59,6 @@ interface UserProfile {
 const App: React.FC = () => {
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, -100]);
-  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   
   // Loading State
   const [isLoading, setIsLoading] = useState(true);
@@ -339,7 +338,7 @@ const App: React.FC = () => {
 
       {/* Hero Section */}
       <header className="relative h-[100svh] min-h-[700px] flex flex-col items-center justify-center overflow-hidden px-4 pt-20">
-        <motion.div style={{ y, opacity }} className="z-10 text-center flex flex-col items-center w-full max-w-6xl">
+        <motion.div style={{ y }} className="z-10 text-center flex flex-col items-center w-full max-w-6xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.2 }} className="flex flex-col items-center gap-2 mb-8 w-full max-w-md">
             <div className="flex justify-between w-full text-xs font-mono text-[#FF00FF] tracking-widest uppercase mb-1">
                <span>Ronda Actual</span>
