@@ -3,13 +3,15 @@ import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Fix: Cast process to any to avoid TypeScript error about missing cwd property
-  const env = loadEnv(mode, (process as any).cwd(), '');
+  const env = loadEnv(mode, '.', '');
   return {
     plugins: [react()],
-    root: '.', // Define la raíz del proyecto
+    root: '.', // Define la raíz del proyecto explícitamente
+    build: {
+      outDir: 'dist',
+    },
     define: {
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || "") 
     }
   }
 })
