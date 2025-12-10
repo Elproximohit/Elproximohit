@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
     plugins: [react()],
-    root: '.', // Define la raíz del proyecto explícitamente
+    root: '.', // Importante: define la raíz del proyecto explícitamente
     build: {
       outDir: 'dist',
     },
