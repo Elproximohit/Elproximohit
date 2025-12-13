@@ -1,0 +1,78 @@
+<!-- index.html - servido por Apps Script (doGet). Usa google.script.run para no exponer API_KEY -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Formulario - Enviar cliente / compra</title>
+    <style>
+      body { font-family: Arial; padding: 18px; max-width: 600px; }
+      label { display:block; margin:8px 0; }
+      #msg { margin-top:12px; }
+    </style>
+  </head>
+  <body>
+    <h3>Enviar datos</h3>
+    <form id="frm">
+      <label>Nombre:<br><input name="name" required></label>
+      <label>Email:<br><input name="email" type="email" required></label>
+      <label>Teléfono:<br><input name="phone"></label>
+      <label>ID Transacción (opcional):<br><input name="transactionId"></label>
+      <label>Evidencia (imagen o pdf):<br><input type="file" name="evidence" accept="image/*,application/pdf"></label>
+      <button type="submit">Enviar</button>
+    </form>
+
+    <div id="msg"></div>
+
+    <script>
+      const form = document.getElementById('frm');
+      const msg = document.getElementById('msg');
+
+      form.addEventListener('submit', async function(e){
+        e.preventDefault();
+        msg.style.color = 'green';
+        msg.textContent = 'Enviando...';
+
+        const fd = new FormData(form);
+        const payload = {
+          name: fd.get('name'),
+          email: fd.get('email'),
+          phone: fd.get('phone'),
+          transactionId: fd.get('transactionId')
+        };
+
+        const fileInput = form.querySelector('input[name="evidence"]');
+        if (fileInput && fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          const maxBytes = 6 * 1024 * 1024;
+          if (file.size > maxBytes) { msg.style.color='red'; msg.textContent='Archivo > 6MB.'; return; }
+          try { payload.evidence_b64 = await fileToDataUrl(file); payload.evidence_name = file.name; }
+          catch(err){ msg.style.color='red'; msg.textContent='Error leyendo archivo: '+err; return; }
+        }
+
+        google.script.run.withSuccessHandler(function(response){
+          if (response && response.result === 'success') {
+            msg.style.color='green';
+            msg.textContent = 'Enviado correctamente. transactionId: ' + (response.transactionId || '(none)');
+            form.reset();
+          } else {
+            msg.style.color='red';
+            msg.textContent = 'Error: ' + JSON.stringify(response);
+          }
+        }).withFailureHandler(function(err){
+          msg.style.color='red';
+          msg.textContent = 'Error servidor: ' + err;
+          console.error(err);
+        }).submitFromClient(payload);
+      });
+
+      function fileToDataUrl(file) {
+        return new Promise(function(resolve, reject) {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = err => reject(err);
+          reader.readAsDataURL(file);
+        });
+      }
+    </script>
+  </body>
+</html>
