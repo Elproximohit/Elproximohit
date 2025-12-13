@@ -14,7 +14,7 @@ async function getRawBody(req: any) {
 async function getPaypalAccessToken(clientId: string, secret: string) {
   const tokenResp = await fetch("https://api-m.paypal.com/v1/oauth2/token", {
     method: "POST",
-    headers: { Authorization: "Basic " + Buffer.from(\`\${clientId}:\${secret}\`).toString("base64"), "Content-Type": "application/x-www-form-urlencoded" },
+    headers: { Authorization: "Basic " + Buffer.from(`${clientId}:${secret}`).toString("base64"), "Content-Type": "application/x-www-form-urlencoded" },
     body: "grant_type=client_credentials"
   });
   if (!tokenResp.ok) throw new Error("Failed to get PayPal access token");
@@ -49,7 +49,7 @@ export default async function handler(req: any, res: any) {
 
     const verifyResp = await fetch("https://api-m.paypal.com/v1/notifications/verify-webhook-signature", {
       method: "POST",
-      headers: { Authorization: \`Bearer \${accessToken}\`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
       body: JSON.stringify(verifyPayload)
     });
     const verifyJson = await verifyResp.json();
