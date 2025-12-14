@@ -2,23 +2,27 @@
 import Stripe from "stripe";
 import { buffer } from "micro";
 import type { IncomingMessage, ServerResponse } from "http";
-import emailjs from "emailjs-com";
+import { Resend } from "resend";
 
 export const config = {
   api: {
-    bodyParser: false, // Stripe requires raw body
+    bodyParser: false, // Stripe requiere raw body
   },
 };
 
-// Inicializa Stripe
+// Inicializa Stripe con versión estable
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-11-17.clover",
+  apiVersion: "2023-10-16",
 });
 
+// Inicializa Resend
+const resend = new Resend(process.env.RESEND_API_KEY!);
+
+// Secret del webhook de Stripe
 const webhookSecret = process.env.WEBHOOK_SECRET!;
 
 export default async function handler(
-  req: IncomingMessage & { headers: any; body?: any },
+  req: IncomingMessage & { headers: any },
   res: ServerResponse
 ) {
   if (req.method !== "POST") {
@@ -27,7 +31,8 @@ export default async function handler(
     return;
   }
 
-  const buf = await buffer(req as any); // micro buffer
+  // Buffer de la request (Stripe requiere raw body)
+  const buf = await buffer(req as any);
   const sig = req.headers["stripe-signature"] as string;
 
   let event: Stripe.Event;
@@ -47,19 +52,20 @@ export default async function handler(
     const customerEmail = session.customer_email;
     const productName = session.metadata?.productName || "Producto";
 
-    // Enviar Email con EmailJS
     try {
-      await emailjs.send(
-        process.env.EMAILJS_SERVICE_ID!,
-        process.env.EMAILJS_TEMPLATE_ID!,
-        {
-          to_email: customerEmail,
-          product_name: productName,
-          pdf_url: process.env.PDF_URL,
-          protools_template_url: process.env.PROTOOLS_TEMPLATE_URL,
-        },
-        process.env.EMAILJS_USER_ID!
-      );
+      // Envío de email con Resend
+      await resend.emails.send({
+        from: "tucorreo@elproximohit.com",
+        to: customerEmail!,
+        subject: `Tu PDF: ${productName}`,
+        html: `
+          <p>Hola!</p>
+          <p>Gracias por tu compra de <strong>${productName}</strong>.</p>
+          <p>Descarga tu PDF <a href="${process.env.PDF_URL}">aquí</a></p>
+          <p>Si tienes problemas contacta a soporte@elproximohit.com</p>
+        `,
+      });
+
       console.log(`Email enviado a ${customerEmail}`);
     } catch (err) {
       console.error("Error enviando email:", err);
