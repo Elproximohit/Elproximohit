@@ -19,7 +19,7 @@ export const POST = async (req: NextRequest) => {
     event = stripe.webhooks.constructEvent(Buffer.from(buf), sig, webhookSecret);
   } catch (err: any) {
     console.error("Webhook signature verification failed:", err.message);
-    return new NextResponse(\`Webhook Error: \${err.message}\`, { status: 401 });
+    return new NextResponse(`Webhook Error: ${err.message}`, { status: 401 });
   }
 
   // Manejar eventos específicos de report
