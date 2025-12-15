@@ -122,18 +122,20 @@ const App: React.FC = () => {
   }, []);
 
   // Simulación de ventas entrando en tiempo real (solo visual)
-  useEffect(() => {
-    const interval = setInterval(() => {
-       setCurrentParticipants(prev => {
-         if (prev >= 1000) {
-            if (!showWinnerAnnouncement) setShowWinnerAnnouncement(true);
-            return 1000;
-         }
-         return prev + (Math.random() > 0.8 ? 1 : 0);
-       });
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [showWinnerAnnouncement]);
+// Modificado para reiniciar al llegar a 1000 ventas
+useEffect(() => {
+  const interval = setInterval(() => {
+    setCurrentParticipants(prev => {
+      let next = prev + (Math.random() > 0.8 ? 1 : 0); // incremento aleatorio
+      if (next >= MAX_PARTICIPANTS) {
+        next = 0; // reinicia a 0 cuando llega a 1000
+        setShowWinnerAnnouncement(true); // mostrar anuncio de ganador
+      }
+      return next;
+    });
+  }, 4000); // cada 4s
+  return () => clearInterval(interval);
+}, []);
 
   useEffect(() => {
     if (!showPaymentModal) {
