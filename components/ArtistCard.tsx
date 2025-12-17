@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FeatureItem } from '../types';
 import { CheckCircle, Share2, Check, Copy, Mail, MessageCircle, Twitter, X, MessageSquare } from 'lucide-react';
 
 interface FeatureCardProps {
-  artist: FeatureItem; // Kept prop name generic to minimize refactoring, but it represents a feature
+  artist: FeatureItem;
   onClick: () => void;
 }
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ artist, onClick }) => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   const shareData = {
     title: 'El Proximo Hit',
@@ -57,7 +57,6 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ artist, onClick }) => {
         url = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
         break;
       case 'sms':
-        // SMS behavior varies by device, but usually body is enough
         url = `sms:?&body=${encodedText}%20${encodedUrl}`;
         break;
     }
@@ -78,19 +77,32 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ artist, onClick }) => {
       data-hover="true"
       onClick={onClick}
     >
-      {/* Image Background with Zoom */}
+      {/* Image Background with Skeleton + Blur */}
       <div className="absolute inset-0 overflow-hidden">
-        <motion.img 
-          src={artist.image} 
-          alt={artist.title} 
-          className="h-full w-full object-cover grayscale will-change-transform"
+        {!loaded && (
+          <div className="absolute inset-0 bg-gray-800 animate-pulse" />
+        )}
+
+        <motion.img
+          src={artist.image}
+          alt={artist.title}
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          className={`h-full w-full object-cover transition-transform duration-700 ease-out 
+            ${loaded ? 'blur-0 opacity-100' : 'blur-sm opacity-0'}`}
           variants={{
             rest: { scale: 1, opacity: 0.4, filter: 'grayscale(100%)' },
-            hover: { scale: 1.05, opacity: 0.8, filter: 'grayscale(0%)' }
+            hover: { scale: 1.07, opacity: 0.85, filter: 'grayscale(0%)' },
           }}
-          transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
         />
-        <div className="absolute inset-0 bg-black/50 group-hover:bg-[#FF0000]/10 transition-colors duration-500" />
+        <motion.div
+          className="absolute inset-0 bg-black/50 transition-colors duration-500"
+          variants={{
+            rest: { backgroundColor: 'rgba(0,0,0,0.5)' },
+            hover: { backgroundColor: 'rgba(255,0,0,0.1)' },
+          }}
+        />
       </div>
 
       {/* Overlay Info */}

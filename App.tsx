@@ -11,6 +11,12 @@ import PromoVideo from './components/PromoVideo';
 import LoadingScreen from './components/LoadingScreen';
 import { FeatureItem } from './types';
 
+// --- IMÁGENES MISIÓN / QUIÉNES SOMOS ---
+const missionImages = {
+  bRed: '/images/bred.jpg',
+  erios: '/images/erios.jpg',
+};
+
 // --- CONFIGURACIÓN DE PAGOS ---
 // Enlace de pago de Stripe configurado
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_6oUcN6a2g2wD4Ur10fcIE00"; 
@@ -47,7 +53,8 @@ const FEATURES: FeatureItem[] = [
   },
 ];
 
-const PDF_DOWNLOAD_LINK = "https://drive.google.com/uc?export=download&id=16FriG8rNgc-tRi-ff1w2rY0CDv2nZnUi";
+
+  const PDF_DOWNLOAD_LINK = "https://drive.google.com/uc?export=download&id=16FriG8rNgc-tRi-ff1w2rY0CDv2nZnUi";
 
 interface UserProfile {
   name: string;
@@ -118,7 +125,8 @@ const App: React.FC = () => {
           scrollToSection('download');
         }, 1000);
       }
-    }
+    } 
+
   }, []);
 
   // Simulación de ventas entrando en tiempo real (solo visual)
@@ -267,6 +275,25 @@ useEffect(() => {
     }
     setSelectedFeature(FEATURES[nextIndex]);
   };
+
+  // --- ARRAY DE QUIÉNES SOMOS ---
+const quienesSomos: FeatureItem[] = [
+  {
+    id: 'bRed',
+    title: 'B-RED',
+    description: 'Artista y escritor puertorriqueño con más de una década en el juego. Como ingeniero de audio graduado, combina la técnica precisa con la pasión artística para crear sonidos que definen géneros.',
+    image: missionImages.bRed,
+    category: 'Fundador & Ing. Audio',
+  },
+  {
+    id: 'erios',
+    title: 'ERIOS',
+    description: 'Productor visionario que ha colaborado con gigantes como Joyce Santana, Brray y Casper Mágico. Su oído para el hit es inigualable y será el encargado de grabar y producir la canción ganadora.',
+    image: missionImages.erios,
+    category: 'Productor Ejecutivo',
+  },
+  // Puedes agregar más miembros aquí
+];
   
   return (
     <div className="relative min-h-screen text-white selection:bg-[#FF00FF] selection:text-white cursor-auto md:cursor-none overflow-x-hidden">
@@ -483,8 +510,33 @@ useEffect(() => {
           </div>
         </div>
       </section>
+      {/* QUIÉNES SOMOS */}
+<section id="quienes-somos" className="relative z-10 py-20 md:py-32">
+  <div className="max-w-[1600px] mx-auto px-4 md:px-6">
+    
+    <div className="mb-12">
+      <h2 className="text-5xl md:text-7xl font-heading font-bold uppercase">
+        Quiénes <span className="text-[#FF0000]">Somos</span>
+      </h2>
+      <p className="text-gray-400 mt-4 max-w-xl">
+        El equipo detrás de El Próximo Hit.
+      </p>
+    </div>
 
-      {/* Giveaway Section */}
+    <div className="grid grid-cols-1 md:grid-cols-2 border-t border-l border-white/10">
+      {quienesSomos.map((member) => (
+        <FeatureCard
+          key={member.id}
+          artist={member}
+          onClick={() => {}}
+        />
+      ))}
+    </div>
+
+  </div>
+</section>
+
+    {/* Giveaway Section */}
       <section id="giveaway" className="relative z-10 py-20 md:py-32 bg-black border-t border-white/10 overflow-hidden">
         <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#FF0000]/20 via-black to-black pointer-events-none" />
         <div className="max-w-7xl mx-auto px-4 md:px-6 relative">
