@@ -79,7 +79,7 @@ const Hero: React.FC<HeroProps> = ({
                         <div className="absolute top-0 right-0 h-full w-[2px] bg-white blur-[2px] opacity-70" style={{ left: `${progressPercentage}%` }} />
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-difference">
                             <span className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.2em] opacity-80">
-                                FALTAN {MAX_PARTICIPANTS - currentParticipants} PARA SELECCIONAR PARTICIPANTE
+                                FALTAN {MAX_PARTICIPANTS - currentParticipants} VENTAS PARA LA SELECCIÓN DEL PARTICIPANTE ELIGIBLE
                             </span>
                         </div>
                     </div>

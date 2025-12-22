@@ -85,6 +85,30 @@ export default async function handler(req, res) {
       return res.status(502).json({ ok: false, forwarded: true, appsScriptStatus: r.status, appsScriptResponse: text });
     }
 
+    // NUEVO: Enviar email automático con Resend
+    try {
+      const emailPayload = {
+        email: forwardPayload.email,
+        name: forwardPayload.name,
+        transactionId: forwardPayload.transactionId
+      };
+
+      const emailResponse = await fetch(`${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/api/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailPayload)
+      });
+
+      if (!emailResponse.ok) {
+        console.error('Email sending failed, but payment was processed');
+      } else {
+        console.log('Email sent successfully to', forwardPayload.email);
+      }
+    } catch (emailErr) {
+      console.error('Error sending email (non-critical):', emailErr);
+      // No bloqueamos la respuesta a Stripe por un error de email
+    }
+
     // Responder OK a Stripe
     return res.status(200).json({ ok: true, forwarded: true, appsScriptStatus: r.status, appsScriptResponse: text });
   } catch (err) {

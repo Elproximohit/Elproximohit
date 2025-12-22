@@ -22,16 +22,16 @@ const faqs: FAQItem[] = [
     answer: "¡No hay problema! El valor principal es la Guía PDF 'Secretos de Mezcla', que enseña conceptos universales aplicables en FL Studio, Ableton, Logic o cualquier DAW. La plantilla es un bono extra para usuarios de Pro Tools."
   },
   {
-    question: "¿Cómo funciona el sorteo?",
-    answer: "Cada compra de $10 cuenta como una (1) entrada automática. Nuestro sistema registra tu correo electrónico en la base de datos del sorteo. Cuando alcancemos las 1,000 ventas, un sistema aleatorio seleccionará un ganador que será contactado vía email y anunciado en nuestras redes sociales."
+    question: "¿Cómo funciona el Giveaway?",
+    answer: "Cada compra de $10 cuenta como una (1) entrada automática. El sistema registra tu correo electrónico en la base de datos oficial. Cuando alcancemos las 1,000 ventas, un sistema aleatorio seleccionará al ganador que será contactado vía email y anunciado en las redes sociales."
   },
   {
     question: "¿Es seguro el pago?",
-    answer: "Absolutamente. Usamos procesadores de pago líderes en la industria (PayPal y Stripe). Nosotros no almacenamos tu información bancaria; solo guardamos tu email para enviarte los productos y registrarte en el sorteo."
+    answer: "Absolutamente. Se usan procesadores de pago líderes en la industria (PayPal y Stripe). No se almacena tu información bancaria; solo se guarda tu email para enviarte los productos y registrarte en la selección del Giveaway."
   },
   {
     question: "¿Puedo comprar más de una vez para tener más oportunidades?",
-    answer: "Sí. Cada transacción única genera una nueva entrada en nuestra base de datos, aumentando tus probabilidades matemáticas de ganar la producción completa."
+    answer: "Sí. Cada transacción única genera una nueva entrada en la base de datos, aumentando tus probabilidades matemáticas de ganar la producción completa."
   }
 ];
 

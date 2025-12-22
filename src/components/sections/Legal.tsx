@@ -16,7 +16,7 @@ const Legal: React.FC = () => {
                         <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center mb-4"><Gavel className="w-5 h-5 text-[#FF0000]" /></div>
                         <h4 className="font-bold text-white mb-2 text-sm uppercase tracking-wider">Jurisdicción & Ley</h4>
                         <p className="text-xs text-gray-400 leading-relaxed">
-                            Esta acción promocional se rige por el <strong>Reglamento de Prácticas Comerciales del DACO</strong> (Puerto Rico). Cualquier controversia será resuelta exclusivamente ante los tribunales competentes del Estado Libre Asociado de Puerto Rico.
+                            Esta acción promocional se rige por las leyes y reglamentos de <strong>Prácticas Comerciales Aplicables</strong>. Cualquier controversia será resuelta exclusivamente ante los tribunales competentes del Estado Libre Asociado de Puerto Rico.
                         </p>
                     </div>
 

@@ -121,7 +121,7 @@ const App: React.FC = () => {
       if (session) {
         setIsLoggedIn(true);
         setUserProfile({
-          name: session.user.user_metadata.full_name || 'Usuario',
+          name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'Usuario',
           email: session.user.email || '',
           avatar: session.user.user_metadata.avatar_url || '',
           provider: session.user.app_metadata.provider as any || 'email'
@@ -135,7 +135,7 @@ const App: React.FC = () => {
       if (session) {
         setIsLoggedIn(true);
         setUserProfile({
-          name: session.user.user_metadata.full_name || 'Usuario',
+          name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'Usuario',
           email: session.user.email || '',
           avatar: session.user.user_metadata.avatar_url || '',
           provider: session.user.app_metadata.provider as any || 'email'
