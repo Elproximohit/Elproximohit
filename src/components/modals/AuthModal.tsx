@@ -10,6 +10,8 @@ interface AuthModalProps {
     onLoginSuccess?: (email: string, name: string) => void;
 }
 
+import { supabase } from '../../lib/supabaseClient';
+
 const AuthModal: React.FC<AuthModalProps> = ({ showAuthModal, setShowAuthModal, onLoginSuccess }) => {
     const [mode, setMode] = useState<'login' | 'register'>('register');
     const [email, setEmail] = useState('');
@@ -26,39 +28,52 @@ const AuthModal: React.FC<AuthModalProps> = ({ showAuthModal, setShowAuthModal, 
         setSuccessMsg('');
         setIsLoading(true);
 
-        if (mode === 'register') {
-            // REGISTER LOGIC: Send to Lead API (Google Sheet)
-            try {
-                const res = await fetch('/api/register-lead', {
+        try {
+            if (mode === 'register') {
+                const { data, error: signUpError } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            full_name: name,
+                            newsletter_opt_in: newsletter,
+                        }
+                    }
+                });
+
+                if (signUpError) throw signUpError;
+
+                // Sync with Google Sheets Lead API for compatibility
+                fetch('/api/register-lead', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, name, newsletter }),
+                }).catch(err => console.error('Sheet Sync Error:', err));
+
+                if (data.user?.identities?.length === 0) {
+                    setError('Este correo ya está registrado.');
+                } else {
+                    setSuccessMsg('¡Cuenta creada! Revisa tu email para confirmar.');
+                    if (onLoginSuccess) onLoginSuccess(email, name);
+                    setTimeout(() => setShowAuthModal(false), 3000);
+                }
+            } else {
+                const { data, error: signInError } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
                 });
 
-                if (res.ok) {
-                    setSuccessMsg('¡Registro exitoso! Te hemos añadido a la lista.');
-                    // Simulate login
-                    if (onLoginSuccess) onLoginSuccess(email, name);
-                    setTimeout(() => setShowAuthModal(false), 2000);
-                } else {
-                    setError('Hubo un error al registrar. Intenta de nuevo.');
-                }
-            } catch (err) {
-                console.error(err);
-                setError('Error de conexión.');
-            }
-        } else {
-            // LOGIN LOGIC: Simulation (No DB yet)
-            // In a real app, this would call Supabase/Firebase
-            await new Promise(r => setTimeout(r, 1000));
-            if (email && password) {
-                if (onLoginSuccess) onLoginSuccess(email, name || 'Usuario');
+                if (signInError) throw signInError;
+
+                if (onLoginSuccess) onLoginSuccess(email, data.user?.user_metadata?.full_name || 'Usuario');
                 setShowAuthModal(false);
-            } else {
-                setError('Credenciales inválidas (Simulado)');
             }
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message || 'Error al procesar la solicitud.');
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     return (

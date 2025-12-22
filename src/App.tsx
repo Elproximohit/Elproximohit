@@ -28,6 +28,7 @@ import PaymentModal, { UserProfile } from './components/modals/PaymentModal';
 import AuthModal from './components/modals/AuthModal';
 import { FEATURES, MAX_PARTICIPANTS } from './data/content';
 import { FeatureItem } from './types';
+import { supabase } from './lib/supabaseClient';
 
 const App: React.FC = () => {
   const { scrollYProgress } = useScroll();
@@ -66,30 +67,32 @@ const App: React.FC = () => {
 
   // VERIFICACIÓN DE PAGO REAL Y ÚNICO
   useEffect(() => {
-    // 1. Verificar si hay parámetro de éxito en la URL
+    // 1. Verificar si hay parámetro de éxito en la URL o si ya se detectó en esta sesión
     const query = new URLSearchParams(window.location.search);
     const isSuccess = query.get('success');
+    const hasSessionPurchase = sessionStorage.getItem('session_purchased_v1') === 'true';
 
     // 2. Verificar si este navegador YA descargó el archivo (Protección Local)
     const hasAlreadyDownloaded = localStorage.getItem('product_downloaded_v1');
 
-    if (isSuccess) {
-      // Limpiamos la URL INMEDIATAMENTE para que un refresh no sirva
-      window.history.replaceState(null, '', window.location.pathname);
+    if (isSuccess || hasSessionPurchase) {
+      if (isSuccess) {
+        window.history.replaceState(null, '', window.location.pathname);
+        sessionStorage.setItem('session_purchased_v1', 'true');
+      }
 
       if (hasAlreadyDownloaded) {
-        // Si ya descargó antes, no permitimos activar el estado de compra
         setPurchased(false);
-        alert("El enlace de descarga ya fue utilizado anteriormente.");
+        if (isSuccess) alert("El enlace de descarga ya fue utilizado anteriormente.");
       } else {
-        // Si es la primera vez y viene de Stripe, activamos la descarga
         setPurchased(true);
-        setTimeout(() => {
-          scrollToSection('download');
-        }, 1000);
+        if (isSuccess) {
+          setTimeout(() => {
+            scrollToSection('download');
+          }, 1000);
+        }
       }
     }
-
   }, []);
 
   // Fetch Real Participant Count on Mount
@@ -109,6 +112,43 @@ const App: React.FC = () => {
     };
 
     fetchCount();
+  }, []);
+
+  // Supabase Auth Listener
+  useEffect(() => {
+    // Check active session on load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setIsLoggedIn(true);
+        setUserProfile({
+          name: session.user.user_metadata.full_name || 'Usuario',
+          email: session.user.email || '',
+          avatar: session.user.user_metadata.avatar_url || '',
+          provider: session.user.app_metadata.provider as any || 'email'
+        });
+        setEmail(session.user.email || '');
+      }
+    });
+
+    // Listen for changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setIsLoggedIn(true);
+        setUserProfile({
+          name: session.user.user_metadata.full_name || 'Usuario',
+          email: session.user.email || '',
+          avatar: session.user.user_metadata.avatar_url || '',
+          provider: session.user.app_metadata.provider as any || 'email'
+        });
+        setEmail(session.user.email || '');
+      } else {
+        setIsLoggedIn(false);
+        setUserProfile(null);
+        setEmail('');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Cleanup payment modal state on close
@@ -149,30 +189,24 @@ const App: React.FC = () => {
     setEmail(email);
   };
 
-  const handleSocialLogin = (provider: 'google' | 'facebook') => {
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
     setLoginProcessing(true);
-
-    // Simulamos una redirección y captura de datos de API OAuth
-    setTimeout(() => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+    } catch (err) {
+      console.error('Social Login Error:', err);
       setLoginProcessing(false);
-      setIsLoggedIn(true);
-
-      // Datos simulados que vendrían del proveedor
-      const mockUserData: UserProfile = {
-        name: provider === 'google' ? 'Usuario de Google' : 'Usuario de Facebook',
-        email: provider === 'google' ? 'usuario.demo@gmail.com' : 'usuario.demo@facebook.com',
-        avatar: provider === 'google'
-          ? 'https://lh3.googleusercontent.com/a/default-user=s96-c'
-          : 'https://platform-lookaside.fbsbx.com/platform/profilepic/?asid=1000000&height=50&width=50&ext=1699999999&hash=AeQx',
-        provider: provider
-      };
-
-      setUserProfile(mockUserData);
-      setEmail(mockUserData.email); // Auto-completamos el email para el pago
-    }, 2000);
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setIsLoggedIn(false);
     setUserProfile(null);
     setEmail('');
