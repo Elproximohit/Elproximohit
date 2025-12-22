@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import FluidBackground from './components/FluidBackground';
 import CustomCursor from './components/CustomCursor';
@@ -7,16 +7,25 @@ import LoadingScreen from './components/LoadingScreen';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Hero from './components/sections/Hero';
-import Mission from './components/sections/Mission';
-import Features from './components/sections/Features';
-import Team from './components/sections/Team';
-import Giveaway from './components/sections/Giveaway';
-import Download from './components/sections/Download';
-import Legal from './components/sections/Legal';
-import FAQ from './components/FAQ';
+import SectionLoader from './components/ui/SectionLoader';
+
+// Lazy Load Heavy Components
+const Mission = React.lazy(() => import('./components/sections/Mission'));
+const Features = React.lazy(() => import('./components/sections/Features'));
+const Team = React.lazy(() => import('./components/sections/Team'));
+const Giveaway = React.lazy(() => import('./components/sections/Giveaway'));
+const Download = React.lazy(() => import('./components/sections/Download'));
+const Legal = React.lazy(() => import('./components/sections/Legal'));
+const SocialProof = React.lazy(() => import('./components/sections/SocialProof'));
+const Curriculum = React.lazy(() => import('./components/sections/Curriculum'));
+const LeadMagnet = React.lazy(() => import('./components/sections/LeadMagnet'));
+const FAQ = React.lazy(() => import('./components/FAQ'));
+const Process = React.lazy(() => import('./components/sections/Process'));
+const WinnerAnnouncement = React.lazy(() => import('./components/modals/WinnerAnnouncement'));
+
 import FeatureModal from './components/modals/FeatureModal';
 import PaymentModal, { UserProfile } from './components/modals/PaymentModal';
-import WinnerAnnouncement from './components/modals/WinnerAnnouncement';
+import AuthModal from './components/modals/AuthModal';
 import { FEATURES, MAX_PARTICIPANTS } from './data/content';
 import { FeatureItem } from './types';
 
@@ -30,6 +39,7 @@ const App: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState<FeatureItem | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const [purchasing, setPurchasing] = useState(false);
   const [purchased, setPurchased] = useState(false);
@@ -41,7 +51,7 @@ const App: React.FC = () => {
   const [loginProcessing, setLoginProcessing] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
-  const [currentParticipants, setCurrentParticipants] = useState(985);
+  const [currentParticipants, setCurrentParticipants] = useState(17);
   const [isHoveringProgress, setIsHoveringProgress] = useState(false);
   const [showWinnerAnnouncement, setShowWinnerAnnouncement] = useState(false);
 
@@ -49,7 +59,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2800);
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, []);
@@ -82,20 +92,23 @@ const App: React.FC = () => {
 
   }, []);
 
-  // Simulación de ventas entrando en tiempo real (solo visual)
-  // Modificado para reiniciar al llegar a 1000 ventas
+  // Fetch Real Participant Count on Mount
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentParticipants(prev => {
-        let next = prev + (Math.random() > 0.8 ? 1 : 0); // incremento aleatorio
-        if (next >= MAX_PARTICIPANTS) {
-          next = 0; // reinicia a 0 cuando llega a 1000
-          setShowWinnerAnnouncement(true); // mostrar anuncio de ganador
+    const fetchCount = async () => {
+      try {
+        const res = await fetch('/api/get-participant-count');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.count === 'number') {
+            setCurrentParticipants(data.count);
+          }
         }
-        return next;
-      });
-    }, 4000); // cada 4s
-    return () => clearInterval(interval);
+      } catch (error) {
+        console.error("Error fetching count:", error);
+      }
+    };
+
+    fetchCount();
   }, []);
 
   // Cleanup payment modal state on close
@@ -125,6 +138,16 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedFeature]);
 
+  const handleAuthSuccess = (email: string, name: string) => {
+    setIsLoggedIn(true);
+    setUserProfile({
+      name: name,
+      email: email,
+      avatar: '',
+      provider: 'google' // simulado o 'email' si tuviéramos ese tipo
+    });
+    setEmail(email);
+  };
 
   const handleSocialLogin = (provider: 'google' | 'facebook') => {
     setLoginProcessing(true);
@@ -175,6 +198,10 @@ const App: React.FC = () => {
     if (targetId === 'giveaway') targetId = 'giveaway';
     if (targetId === 'legal') targetId = 'legal';
     if (targetId === 'download') targetId = 'download';
+    if (targetId === 'faq' || targetId === 'preguntas') targetId = 'faq';
+    if (targetId === 'curriculum' || targetId === 'el manual') targetId = 'curriculum';
+    if (targetId === 'social-proof' || targetId === 'comunidad') targetId = 'social-proof';
+    if (targetId === 'process' || targetId === 'pasos') targetId = 'process';
 
     const element = document.getElementById(targetId);
     if (element) {
@@ -213,9 +240,12 @@ const App: React.FC = () => {
         scrollToSection={scrollToSection}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
+        onLoginClick={() => setShowAuthModal(true)}
+        isLoggedIn={isLoggedIn}
+        userProfile={userProfile}
       />
 
-      {/* Hero Section */}
+      {/* Hero Section - Keeps eager loading for LCP */}
       <Hero
         y={y}
         currentParticipants={currentParticipants}
@@ -225,27 +255,65 @@ const App: React.FC = () => {
         scrollToSection={scrollToSection}
       />
 
-      <Mission scrollToSection={scrollToSection} />
+      {/* Lazy Loaded Sections */}
+      <Suspense fallback={<SectionLoader />}>
+        <SocialProof />
+      </Suspense>
 
-      <Features features={FEATURES} setSelectedFeature={setSelectedFeature} />
+      <Suspense fallback={<SectionLoader />}>
+        <Process />
+      </Suspense>
 
-      <Team />
+      <Suspense fallback={<SectionLoader />}>
+        <Mission scrollToSection={scrollToSection} />
+      </Suspense>
 
-      <Giveaway />
+      <Suspense fallback={<SectionLoader />}>
+        <Curriculum />
+      </Suspense>
 
-      <Download
-        purchased={purchased}
-        purchasing={purchasing}
-        handleOneTimeDownload={handleOneTimeDownload}
-        setShowPaymentModal={setShowPaymentModal}
-        currentParticipants={currentParticipants}
-      />
+      <Suspense fallback={<SectionLoader />}>
+        <Features features={FEATURES} setSelectedFeature={setSelectedFeature} />
+      </Suspense>
 
-      <FAQ />
+      <Suspense fallback={<SectionLoader />}>
+        <Team />
+      </Suspense>
 
-      <Legal />
+      <Suspense fallback={<SectionLoader />}>
+        <Giveaway />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoader />}>
+        <LeadMagnet />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoader />}>
+        <Download
+          purchased={purchased}
+          purchasing={purchasing}
+          handleOneTimeDownload={handleOneTimeDownload}
+          setShowPaymentModal={setShowPaymentModal}
+          currentParticipants={currentParticipants}
+        />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoader />}>
+        <FAQ />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoader />}>
+        <Legal />
+      </Suspense>
 
       <Footer />
+
+      <Suspense fallback={null}>
+        <WinnerAnnouncement
+          showWinnerAnnouncement={showWinnerAnnouncement}
+          setShowWinnerAnnouncement={setShowWinnerAnnouncement}
+        />
+      </Suspense>
 
       <WinnerAnnouncement
         showWinnerAnnouncement={showWinnerAnnouncement}
@@ -264,6 +332,12 @@ const App: React.FC = () => {
         setEmail={setEmail}
         emailError={emailError}
         setEmailError={setEmailError}
+      />
+
+      <AuthModal
+        showAuthModal={showAuthModal}
+        setShowAuthModal={setShowAuthModal}
+        onLoginSuccess={handleAuthSuccess}
       />
 
       <FeatureModal

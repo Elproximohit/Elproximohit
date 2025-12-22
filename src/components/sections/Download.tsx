@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, Ticket, Download as DownloadIcon, Lock, CreditCard } from 'lucide-react';
-import { PDF_DOWNLOAD_LINK } from '../../data/content';
+import { PDF_DOWNLOAD_LINK, TEMPLATE_DOWNLOAD_LINK } from '../../data/content';
 
 interface DownloadProps {
     purchased: boolean;
@@ -35,25 +35,45 @@ const Download: React.FC<DownloadProps> = ({
                     <ul className="text-left space-y-4 mb-10 w-full max-w-md mx-auto">
                         <li className="flex items-center gap-3 text-gray-300"><CheckCircle className="w-5 h-5 text-[#FF0000]" /> <span>Guía de Producción PDF Completa (Valor Real)</span></li>
                         <li className="flex items-center gap-3 text-gray-300"><CheckCircle className="w-5 h-5 text-[#FF0000]" /> <span>Plantilla DAW Pro Tools (Valor Real)</span></li>
+                        <li className="flex items-center gap-3 text-gray-300"><CheckCircle className="w-5 h-5 text-[#FF0000]" /> <span>Bonus: Acceso a Comunidad Privada Discord</span></li>
+                        <li className="flex items-center gap-3 text-gray-300"><CheckCircle className="w-5 h-5 text-[#FF0000]" /> <span>Bonus: Pack de Emails para Disqueras</span></li>
                         <li className="flex items-center gap-3 text-[#FF00FF] font-black text-lg bg-[#FF00FF]/10 p-3 rounded-lg border border-[#FF00FF]/30 shadow-[0_0_15px_rgba(255,0,255,0.2)] transform scale-105 origin-center my-2">
                             <Ticket className="w-6 h-6 text-white animate-pulse" /> <span className="uppercase tracking-widest">Bonus: Entrada al Giveaway</span>
                         </li>
                     </ul>
 
                     {purchased ? (
-                        <a
-                            href={PDF_DOWNLOAD_LINK}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download
-                            onClick={handleOneTimeDownload}
-                            className="w-full max-w-md py-5 text-base font-bold uppercase tracking-[0.2em] transition-all duration-300 relative overflow-hidden group bg-[#00FF00] text-black hover:bg-[#32CD32] block text-center shadow-lg shadow-green-500/20 cursor-pointer"
-                        >
-                            <span className="relative z-10 flex items-center justify-center gap-2">
-                                <DownloadIcon className="w-5 h-5 animate-bounce" /> Descargar Ahora (1 Uso)
-                            </span>
-                            <div className="absolute inset-0 bg-white/20 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 ease-out" />
-                        </a>
+                        <div className="w-full max-w-md space-y-4">
+                            <a
+                                href={PDF_DOWNLOAD_LINK}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download
+                                onClick={handleOneTimeDownload}
+                                className="w-full py-5 text-base font-bold uppercase tracking-[0.2em] transition-all duration-300 relative overflow-hidden group bg-white text-black hover:bg-gray-200 block text-center shadow-lg cursor-pointer rounded-lg"
+                            >
+                                <span className="relative z-10 flex items-center justify-center gap-2">
+                                    <DownloadIcon className="w-5 h-5 animate-bounce" /> Descargar Manual (PDF)
+                                </span>
+                                <div className="absolute inset-0 bg-black/5 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 ease-out" />
+                            </a>
+
+                            <a
+                                href={TEMPLATE_DOWNLOAD_LINK}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download
+                                onClick={handleOneTimeDownload}
+                                className="w-full py-5 text-base font-bold uppercase tracking-[0.2em] transition-all duration-300 relative overflow-hidden group bg-[#FF0000] text-white hover:bg-[#FF00FF] block text-center shadow-lg shadow-red-600/20 cursor-pointer rounded-lg"
+                            >
+                                <span className="relative z-10 flex items-center justify-center gap-2">
+                                    <DownloadIcon className="w-5 h-5 animate-bounce" /> Descargar Plantilla (PT)
+                                </span>
+                                <div className="absolute inset-0 bg-white/20 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 ease-out" />
+                            </a>
+
+                            <p className="text-xs text-[#00FF00] font-bold uppercase tracking-widest mt-4">✓ Acceso Desbloqueado Correctamente</p>
+                        </div>
                     ) : (
                         <>
                             {localStorage.getItem('product_downloaded_v1') ? (

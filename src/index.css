@@ -25,7 +25,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, .font-heading {
+h1,
+h2,
+h3,
+.font-heading {
   font-family: 'Syncopate', sans-serif;
 }
 
@@ -33,4 +36,48 @@ h1, h2, h3, .font-heading {
   .cursor-none {
     cursor: none;
   }
+}
+
+/* Aggressive Performance Optimizations */
+@keyframes starPulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes fluidMove {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-fluid-optimized {
+  background: radial-gradient(circle at 20% 30%, rgba(255, 0, 0, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255, 0, 255, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 100%);
+  background-size: 200% 200%;
+  animation: fluidMove 20s ease infinite;
+  will-change: background-position;
+}
+
+.star-twinkle {
+  animation: starPulse var(--star-duration) ease-in-out infinite;
+  animation-delay: var(--star-delay);
+  will-change: opacity, transform;
 }

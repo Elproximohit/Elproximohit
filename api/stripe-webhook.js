@@ -56,15 +56,20 @@ export default async function handler(req, res) {
     return res.status(400).send(`Webhook signature verification failed: ${err.message}`);
   }
 
-  // Construye el payload que quieres enviar al Apps Script.
-  // Ajusta los campos según lo que tu Apps Script espera.
+  const session = event.data.object;
+
+  // Construye el payload que coincide exactamente con los campos del code.gs
   const forwardPayload = {
     apiKey: process.env.APPS_API_KEY,
-    name: event.data?.object?.billing_details?.name || 'Stripe Customer',
-    email: event.data?.object?.billing_details?.email || '',
-    transactionId: event.id,      // identificador del evento (puedes cambiar)
-    tipo: event.type || 'stripe_event',
-    event: event,                 // opcional: enviar todo el objeto del evento
+    name: session?.customer_details?.name || session?.billing_details?.name || 'Stripe Customer',
+    email: session?.customer_details?.email || session?.billing_details?.email || '',
+    phone: session?.customer_details?.phone || '',
+    transactionId: session.id, // Checkout Session ID
+    tipo: 'STRIPE_CHECKOUT_OK', // Para la columna MetodoPago
+    amount: session.amount_total ? (session.amount_total / 100).toFixed(2) : '0',
+    currency: session.currency?.toUpperCase() || 'USD',
+    productos: 'Guía El Próximo Hit + Bonus', // Valor por defecto o extraer de line_items si es posible
+    timestamp: new Date().toISOString()
   };
 
   try {

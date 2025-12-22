@@ -64,19 +64,41 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             );
     };
 
-    const executePayment = () => {
+    const executePayment = async () => {
         if (!validateEmail(email)) {
             setEmailError('Por favor ingresa un correo electrónico válido.');
             return;
         }
         setEmailError('');
 
-        // Aquí es donde ocurre la redirección al link de Stripe o PayPal
-        const paymentUrl = selectedMethod === 'paypal'
-            ? PAYPAL_LINK
-            : STRIPE_PAYMENT_LINK;
+        // 1. Registrar Lead (Intento de Compra)
+        try {
+            await fetch('/api/register-lead', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email,
+                    name: userProfile?.name || 'Guest'
+                }),
+            });
+        } catch (err) {
+            console.error("Error registrando lead:", err);
+            // Continuamos con el pago aunque falle el registro del lead
+        }
 
-        // Redirigimos en la misma pestaña para que la experiencia de "regreso" sea fluida
+        // 2. Construir URL de Pago con Email pre-rellenado
+        // Stripe soporta ?prefilled_email=
+        const baseUrl = selectedMethod === 'paypal' ? PAYPAL_LINK : STRIPE_PAYMENT_LINK;
+        // Solo para Stripe añadimos el prefilled_email si es un link de Stripe
+        // (Nota: PAYPAL_LINK suele ser paypal.me, que no soporta params tan fácil, pero Stripe sí)
+        let paymentUrl = baseUrl;
+
+        if (selectedMethod === 'stripe') {
+            const separator = baseUrl.includes('?') ? '&' : '?';
+            paymentUrl = `${baseUrl}${separator}prefilled_email=${encodeURIComponent(email)}`;
+        }
+
+        // Redirigimos
         window.location.href = paymentUrl;
     };
 

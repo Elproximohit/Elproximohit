@@ -11,6 +11,7 @@ export const MAX_PARTICIPANTS = 1000;
 export const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_6oUcN6a2g2wD4Ur10fcIE00";
 export const PAYPAL_LINK = "https://www.paypal.me/Bred210";
 export const PDF_DOWNLOAD_LINK = "https://drive.google.com/uc?export=download&id=16FriG8rNgc-tRi-ff1w2rY0CDv2nZnUi";
+export const TEMPLATE_DOWNLOAD_LINK = "https://drive.google.com/uc?export=download&id=13V0yhcbtHBQLW2bGJ7cj1omzXbsScDaX";
 
 export const FEATURES: FeatureItem[] = [
     {
