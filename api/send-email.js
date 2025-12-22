@@ -1,13 +1,29 @@
 /**
  * Vercel serverless function:
  * - Envía correos automáticos usando Resend con template premium
- * - Triggered por el webhook de Stripe o manualmente
+ * - Adjunta PDFs directamente al email
  * 
  * Variables de entorno requeridas (configurar en Vercel):
  * - RESEND_API_KEY
+ * - PDF_DOWNLOAD_LINK (URL pública del PDF)
+ * - TEMPLATE_DOWNLOAD_LINK (URL pública de la plantilla)
  */
 
 import { PurchaseConfirmationEmail } from './email-template.js';
+
+async function fetchFileAsBase64(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch ${url}`);
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    return buffer.toString('base64');
+  } catch (error) {
+    console.error('Error fetching file:', error);
+    return null;
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -29,6 +45,31 @@ export default async function handler(req, res) {
     minute: '2-digit'
   });
 
+  const pdfUrl = process.env.PDF_DOWNLOAD_LINK || 'https://drive.google.com/uc?export=download&id=16FriG8rNgc-tRi-ff1w2rY0CDv2nZnUi';
+  const templateUrl = process.env.TEMPLATE_DOWNLOAD_LINK || 'https://drive.google.com/uc?export=download&id=13V0yhcbtHBQLW2bGJ7cj1omzXbsScDaX';
+
+  // Fetch attachments in parallel
+  const [pdfBase64, templateBase64] = await Promise.all([
+    fetchFileAsBase64(pdfUrl),
+    fetchFileAsBase64(templateUrl)
+  ]);
+
+  const attachments = [];
+
+  if (pdfBase64) {
+    attachments.push({
+      filename: 'El-Proximo-Hit-Guia.pdf',
+      content: pdfBase64
+    });
+  }
+
+  if (templateBase64) {
+    attachments.push({
+      filename: 'Pro-Tools-Template.ptx',
+      content: templateBase64
+    });
+  }
+
   const emailPayload = {
     from: 'El Próximo Hit <noreply@send.elproximohit.com>',
     to: [email],
@@ -39,9 +80,10 @@ export default async function handler(req, res) {
       transactionId: transactionId || 'N/A',
       purchaseDate: purchaseDate,
       amount: amount,
-      pdfDownloadLink: process.env.PDF_DOWNLOAD_LINK || 'https://drive.google.com/uc?export=download&id=16FriG8rNgc-tRi-ff1w2rY0CDv2nZnUi',
-      templateDownloadLink: process.env.TEMPLATE_DOWNLOAD_LINK || 'https://drive.google.com/uc?export=download&id=13V0yhcbtHBQLW2bGJ7cj1omzXbsScDaX'
-    })
+      pdfDownloadLink: pdfUrl,
+      templateDownloadLink: templateUrl
+    }),
+    attachments: attachments.length > 0 ? attachments : undefined
   };
 
   try {
@@ -61,7 +103,11 @@ export default async function handler(req, res) {
       return res.status(response.status).json({ error: 'Failed to send email', details: data });
     }
 
-    return res.status(200).json({ success: true, emailId: data.id });
+    return res.status(200).json({
+      success: true,
+      emailId: data.id,
+      attachmentsIncluded: attachments.length
+    });
   } catch (err) {
     console.error('Error sending email:', err);
     return res.status(500).json({ error: 'Internal server error' });
