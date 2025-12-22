@@ -372,6 +372,8 @@ const App: React.FC = () => {
         showAuthModal={showAuthModal}
         setShowAuthModal={setShowAuthModal}
         onLoginSuccess={handleAuthSuccess}
+        handleSocialLogin={handleSocialLogin}
+        loginProcessing={loginProcessing}
       />
 
       <FeatureModal
