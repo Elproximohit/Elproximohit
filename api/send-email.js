@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   const templateUrl = process.env.TEMPLATE_DOWNLOAD_LINK || 'https://drive.google.com/uc?export=download&id=13V0yhcbtHBQLW2bGJ7cj1omzXbsScDaX';
 
   const emailPayload = {
-    from: 'El Próximo Hit <noreply@send.elproximohit.com>',
+    from: 'El Próximo Hit <noreply@elproximohit.com>',
     to: [email],
     subject: '🎵 Tu Guía "El Próximo Hit" está lista',
     html: PurchaseConfirmationEmail({
