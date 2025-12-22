@@ -1,29 +1,13 @@
 /**
  * Vercel serverless function:
  * - Envía correos automáticos usando Resend con template premium
- * - Adjunta PDFs directamente al email
+ * - Links de descarga (attachments exceden 40MB limit de Resend)
  * 
  * Variables de entorno requeridas (configurar en Vercel):
  * - RESEND_API_KEY
- * - PDF_DOWNLOAD_LINK (URL pública del PDF)
- * - TEMPLATE_DOWNLOAD_LINK (URL pública de la plantilla)
  */
 
 import { PurchaseConfirmationEmail } from './email-template.js';
-
-async function fetchFileAsBase64(url) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Failed to fetch ${url}`);
-
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    return buffer.toString('base64');
-  } catch (error) {
-    console.error('Error fetching file:', error);
-    return null;
-  }
-}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -48,28 +32,6 @@ export default async function handler(req, res) {
   const pdfUrl = process.env.PDF_DOWNLOAD_LINK || 'https://drive.google.com/uc?export=download&id=16FriG8rNgc-tRi-ff1w2rY0CDv2nZnUi';
   const templateUrl = process.env.TEMPLATE_DOWNLOAD_LINK || 'https://drive.google.com/uc?export=download&id=13V0yhcbtHBQLW2bGJ7cj1omzXbsScDaX';
 
-  // Fetch attachments in parallel
-  const [pdfBase64, templateBase64] = await Promise.all([
-    fetchFileAsBase64(pdfUrl),
-    fetchFileAsBase64(templateUrl)
-  ]);
-
-  const attachments = [];
-
-  if (pdfBase64) {
-    attachments.push({
-      filename: 'El-Proximo-Hit-Guia.pdf',
-      content: pdfBase64
-    });
-  }
-
-  if (templateBase64) {
-    attachments.push({
-      filename: 'Pro-Tools-Template.ptx',
-      content: templateBase64
-    });
-  }
-
   const emailPayload = {
     from: 'El Próximo Hit <noreply@send.elproximohit.com>',
     to: [email],
@@ -82,8 +44,7 @@ export default async function handler(req, res) {
       amount: amount,
       pdfDownloadLink: pdfUrl,
       templateDownloadLink: templateUrl
-    }),
-    attachments: attachments.length > 0 ? attachments : undefined
+    })
   };
 
   try {
@@ -105,8 +66,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      emailId: data.id,
-      attachmentsIncluded: attachments.length
+      emailId: data.id
     });
   } catch (err) {
     console.error('Error sending email:', err);
